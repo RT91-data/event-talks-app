@@ -10,13 +10,16 @@ Built with **Python Flask** on the backend and **vanilla HTML, CSS, and JavaScri
 
 - **Automated Feed Parsing**: Fetches the official [BigQuery Release Notes XML Feed](https://docs.cloud.google.com/feeds/bigquery-release-notes.xml) and parses it into structured JSON.
 - **Granular Updates**: Splits day-based release logs by categories (Features, Issues, Changes, Breaking changes, Announcements) so you can interact with individual items.
-- **Sleek Dark Theme**: Implements a Google Cloud-inspired dark dashboard using glassmorphism styling, clean animations, and responsive grids.
+- **Theme Toggle Switch**: Seamlessly switch between the default obsidian-blue dark mode and a clean, high-contrast light mode with a single header action.
 - **Live Search & Filters**: Dynamically query updates by keyword or filter them by category (e.g. only show "Breaking" announcements) with instant page updates.
+- **Direct Copy to Clipboard**: Copy any individual update description text directly from the dashboard cards with a single click.
+- **Export to CSV Utility**: Download the entire release notes database (Date, Type, Link, Description) locally as a formatted `.csv` file.
 - **Smart Twitter/X Composer**:
-  - Automatically truncates long descriptions to stay safely within the **280-character limit**.
-  - Adds interactive tag pills (`#BigQuery`, `#GoogleCloud`, `#AI`, `#Gemini`) that update remaining characters in real-time.
-  - Generates official documentation reference links (`Docs: URL`).
-  - Single-click action to tweet via X web intent or copy the raw text to your clipboard.
+  - **Preserves Manual Edits**: Dynamically extracts the custom message you type in the text box and preserves it when you toggle hashtags.
+  - **Reference Link Toggle**: A custom sliding switch inside the modal lets you easily include or exclude the Google documentation URL to free up 77 characters.
+  - **Auto-Formatting**: Truncates long descriptions automatically on initial load to fit the **280-character limit**.
+  - **Quick-Tag Pills**: Tap to toggle hashtags (`#BigQuery`, `#GoogleCloud`, `#AI`, `#Gemini`) which dynamically append/remove from the tweet and recalculate limits in real-time.
+  - **One-click Share**: Opens the X web intent URL (`https://twitter.com/intent/tweet?text=...`) in a tailored popup or copies the text to the clipboard.
 - **Performance Caching**: Implements a 5-minute in-memory cache to prevent redundant external network requests and ensure lightning-fast page loading.
 
 ---
@@ -30,9 +33,9 @@ event-talks-app/
 │   └── index.html          # Dashboard page (HTML5 semantic structure)
 ├── static/
 │   ├── css/
-│   │   └── style.css       # Obsidian glassmorphism stylesheet
+│   │   └── style.css       # Obsidian glassmorphism stylesheet & light overrides
 │   └── js/
-│       └── main.js         # Frontend interactive logic (AJAX, stats, compose modal)
+│       └── main.js         # Frontend interactive logic (theme, export, clipboard, composer)
 ├── .gitignore              # Files excluded from git tracking
 └── README.md               # Project documentation (this file)
 ```
