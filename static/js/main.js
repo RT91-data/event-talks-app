@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnExportCsv = document.getElementById('btn-export-csv');
     const themeToggle = document.getElementById('theme-toggle');
     const themeToggleIcon = document.getElementById('theme-toggle-icon');
+    const toggleIncludeLink = document.getElementById('toggle-include-link');
     
     const searchInput = document.getElementById('search-input');
     const filterBtns = document.querySelectorAll('.filter-btn');
@@ -312,8 +313,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update tags visual state
         updateTagPills();
         
+        // Reset reference link checkbox to checked
+        if (toggleIncludeLink) {
+            toggleIncludeLink.checked = true;
+        }
+
         // Generate tweet text
-        rebuildTweetText();
+        rebuildTweetText(true);
         
         // Show modal
         tweetModal.classList.remove('hidden');
@@ -324,28 +330,53 @@ document.addEventListener('DOMContentLoaded', () => {
         tweetModal.classList.add('hidden');
     }
 
-    // Rebuild Tweet Content dynamically
-    function rebuildTweetText() {
-        const hashtags = activeTags.join(' ');
-        const url = selectedUpdate.link || '';
+    // Helper to extract clean body from composer
+    function extractUserBody(currentVal) {
+        let text = currentVal;
         
-        // Setup formatting
-        const prefix = `BigQuery Update: [${selectedUpdate.type}] `;
+        // Strip active tags from the end
+        activeTags.forEach(tag => {
+            const tagRegex = new RegExp('\\s*' + escapeRegExp(tag) + '\\s*$', 'gi');
+            text = text.replace(tagRegex, '');
+        });
         
-        // Overhead calculations (prefix + spacings + URL + tags)
-        const linkText = url ? `\n\nDocs: ${url}` : '';
-        const tagsText = hashtags ? `\n${hashtags}` : '';
-        
-        const suffix = linkText + tagsText;
-        const totalOverhead = prefix.length + suffix.length;
-        const maxDescLen = 280 - totalOverhead;
-        
-        let desc = selectedUpdate.descText;
-        if (desc.length > maxDescLen) {
-            desc = desc.substring(0, maxDescLen - 3) + '...';
+        // Strip URL if it appears near the end
+        if (selectedUpdate.link) {
+            const urlRegex = new RegExp('\\s*Docs:\\s*' + escapeRegExp(selectedUpdate.link) + '\\s*$', 'gi');
+            text = text.replace(urlRegex, '');
+            const rawUrlRegex = new RegExp('\\s*' + escapeRegExp(selectedUpdate.link) + '\\s*$', 'gi');
+            text = text.replace(rawUrlRegex, '');
         }
         
-        tweetTextarea.value = prefix + desc + suffix;
+        return text.trim();
+    }
+
+    // Rebuild Tweet Content dynamically
+    function rebuildTweetText(isInitial = false) {
+        const includeLink = toggleIncludeLink ? toggleIncludeLink.checked : true;
+        const hashtags = activeTags.join(' ');
+        
+        let userBody = '';
+        if (isInitial) {
+            userBody = `BigQuery Update: [${selectedUpdate.type}] ${selectedUpdate.descText}`;
+        } else {
+            userBody = extractUserBody(tweetTextarea.value);
+        }
+        
+        const linkText = (includeLink && selectedUpdate.link) ? `\n\nDocs: ${selectedUpdate.link}` : '';
+        const tagsText = hashtags ? `\n${hashtags}` : '';
+        const suffix = linkText + tagsText;
+        
+        // Truncate only on initial load if needed
+        if (isInitial) {
+            const totalOverhead = suffix.length;
+            const maxBodyLen = 280 - totalOverhead;
+            if (userBody.length > maxBodyLen) {
+                userBody = userBody.substring(0, maxBodyLen - 3) + '...';
+            }
+        }
+        
+        tweetTextarea.value = userBody + suffix;
         updateCharCount();
     }
 
@@ -473,6 +504,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Export CSV Event
     if (btnExportCsv) {
         btnExportCsv.addEventListener('click', exportToCSV);
+    }
+
+    // Link Toggle Event
+    if (toggleIncludeLink) {
+        toggleIncludeLink.addEventListener('change', () => {
+            rebuildTweetText(false);
+        });
     }
 
     // Refresh Event
