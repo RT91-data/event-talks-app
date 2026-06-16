@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const btnRefresh = document.getElementById('btn-refresh');
     const spinner = document.getElementById('spinner');
+    const btnExportCsv = document.getElementById('btn-export-csv');
     
     const searchInput = document.getElementById('search-input');
     const filterBtns = document.querySelectorAll('.filter-btn');
@@ -233,6 +234,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <span class="badge ${getTypeBadgeClass(upd.type)}">${upd.type}</span>
                             </div>
                             <div class="update-actions">
+                                <button class="btn-action btn-action-copy" data-text="${encodeURIComponent(upd.description_text)}" title="Copy text to clipboard">
+                                    <i class="fa-regular fa-copy"></i>
+                                </button>
                                 <button class="btn-action btn-action-tweet" data-date="${entry.date}" data-type="${upd.type}" data-text="${encodeURIComponent(upd.description_text)}" data-link="${entry.link}" title="Tweet about this update">
                                     <i class="fa-brands fa-x-twitter"></i>
                                 </button>
@@ -271,6 +275,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 const link = button.getAttribute('data-link');
                 
                 openTweetModal(date, type, descText, link);
+            });
+        });
+
+        // Add event listeners to the new copy buttons
+        document.querySelectorAll('.btn-action-copy').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const button = e.currentTarget;
+                const descText = decodeURIComponent(button.getAttribute('data-text'));
+                navigator.clipboard.writeText(descText)
+                    .then(() => {
+                        showToast('Description copied to clipboard!', 'fa-solid fa-check-circle');
+                    })
+                    .catch(err => {
+                        console.error('Copy failed:', err);
+                        showToast('Failed to copy text', 'fa-solid fa-circle-exclamation');
+                    });
             });
         });
     }
@@ -415,6 +435,43 @@ document.addEventListener('DOMContentLoaded', () => {
             rebuildTweetText();
         });
     });
+
+    // Export to CSV Function
+    function exportToCSV() {
+        if (releasesData.length === 0) {
+            showToast('No data to export', 'fa-solid fa-circle-exclamation');
+            return;
+        }
+
+        // CSV Header
+        let csvContent = '\uFEFF"Date","Type","Link","Description"\r\n';
+
+        releasesData.forEach(entry => {
+            entry.updates.forEach(upd => {
+                const date = entry.date.replace(/"/g, '""');
+                const type = upd.type.replace(/"/g, '""');
+                const link = entry.link.replace(/"/g, '""');
+                const desc = upd.description_text.replace(/"/g, '""');
+
+                csvContent += `"${date}","${type}","${link}","${desc}"\r\n`;
+            });
+        });
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", "bigquery_release_notes.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast('CSV Exported successfully!', 'fa-solid fa-file-csv');
+    }
+
+    // Export CSV Event
+    if (btnExportCsv) {
+        btnExportCsv.addEventListener('click', exportToCSV);
+    }
 
     // Refresh Event
     btnRefresh.addEventListener('click', () => {
