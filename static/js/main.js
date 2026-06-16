@@ -23,6 +23,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnRefresh = document.getElementById('btn-refresh');
     const spinner = document.getElementById('spinner');
     const btnExportCsv = document.getElementById('btn-export-csv');
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeToggleIcon = document.getElementById('theme-toggle-icon');
     
     const searchInput = document.getElementById('search-input');
     const filterBtns = document.querySelectorAll('.filter-btn');
@@ -498,6 +500,38 @@ document.addEventListener('DOMContentLoaded', () => {
             renderReleases();
         });
     });
+
+    // Theme Switcher Logic
+    function initTheme() {
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        if (savedTheme === 'light') {
+            document.body.classList.add('light-theme');
+            if (themeToggleIcon) {
+                themeToggleIcon.className = 'fa-solid fa-moon';
+            }
+        } else {
+            document.body.classList.remove('light-theme');
+            if (themeToggleIcon) {
+                themeToggleIcon.className = 'fa-solid fa-sun';
+            }
+        }
+    }
+
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('light-theme');
+            const isLight = document.body.classList.contains('light-theme');
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+            
+            if (themeToggleIcon) {
+                themeToggleIcon.className = isLight ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+            }
+            
+            showToast(`${isLight ? 'Light' : 'Dark'} mode activated!`, isLight ? 'fa-solid fa-sun' : 'fa-solid fa-moon');
+        });
+    }
+
+    initTheme();
 
     // Initial load
     fetchReleases();
